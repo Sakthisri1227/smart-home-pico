@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Smart Home Energy Dashboard</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Exo+2:wght@300;600;800&display=swap');
+
+    :root {
+      --bg: #050a0e;
+      --card: #0b1520;
+      --border: #1a3a4a;
+      --accent: #00d4ff;
+      --green: #00ff88;
+      --red: #ff4444;
+      --yellow: #ffd700;
+      --text: #c8e6f0;
+      --muted: #4a7a8a;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Exo 2', sans-serif;
+      min-height: 100vh;
+      padding: 24px;
+      background-image:
+        radial-gradient(ellipse at 20% 20%, rgba(0,212,255,0.04) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 80%, rgba(0,255,136,0.03) 0%, transparent 50%);
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    header h1 {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--accent);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    header p {
+      color: var(--muted);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.85rem;
+      margin-top: 4px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      max-width: 900px;
+      margin: 0 auto 24px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--accent), transparent);
+    }
+
+    .card-label {
+      font-size: 0.7rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+
+    .card-value {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 1.8rem;
+      font-weight: bold;
+      color: var(--accent);
+    }
+
+    .card-unit {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .status-on  { color: var(--green); }
+    .status-off { color: var(--red); }
+    .status-auto { color: var(--yellow); }
+
+    .appliances {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      max-width: 900px;
+      margin: 0 auto 24px;
+    }
+
+    .appliance-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .appliance-icon {
+      font-size: 2.2rem;
+    }
+
+    .appliance-name {
+      font-weight: 600;
+      font-size: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .appliance-status {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 1.1rem;
+      margin-top: 4px;
+    }
+
+    .log-box {
+      max-width: 900px;
+      margin: 0 auto;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    .log-title {
+      font-size: 0.7rem;
+      letter-spacing: 2px;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    #log {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.78rem;
+      color: var(--muted);
+      height: 120px;
+      overflow-y: auto;
+      line-height: 1.8;
+    }
+
+    .pulse {
+      display: inline-block;
+      width: 8px; height: 8px;
+      background: var(--green);
+      border-radius: 50%;
+      margin-right: 6px;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.8); }
+    }
+
+    .connect-note {
+      text-align: center;
+      color: var(--muted);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.78rem;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>⚡ Smart Home Energy Dashboard</h1>
+  <p><span class="pulse"></span> Raspberry Pi Pico | Real-time Monitoring</p>
+</header>
+
+<!-- Sensor Cards -->
+<div class="grid">
+  <div class="card">
+    <div class="card-label">Motion Detected</div>
+    <div class="card-value" id="motion">—</div>
+    <div class="card-unit">PIR Sensor</div>
+  </div>
+  <div class="card">
+    <div class="card-label">Brightness</div>
+    <div class="card-value" id="brightness">—</div>
+    <div class="card-unit">% (LDR)</div>
+  </div>
+  <div class="card">
+    <div class="card-label">Current</div>
+    <div class="card-value" id="current">—</div>
+    <div class="card-unit">Amperes (ACS712)</div>
+  </div>
+  <div class="card">
+    <div class="card-label">Power</div>
+    <div class="card-value" id="power">—</div>
+    <div class="card-unit">Watts</div>
+  </div>
+  <div class="card">
+    <div class="card-label">Energy Used</div>
+    <div class="card-value" id="energy">—</div>
+    <div class="card-unit">Wh (this session)</div>
+  </div>
+  <div class="card">
+    <div class="card-label">Est. Cost</div>
+    <div class="card-value" id="cost">—</div>
+    <div class="card-unit">₹ (@ ₹6.5/kWh)</div>
+  </div>
+</div>
+
+<!-- Appliance Status -->
+<div class="appliances">
+  <div class="appliance-card">
+    <div class="appliance-icon">💡</div>
+    <div>
+      <div class="appliance-name">Light (Relay 1)</div>
+      <div class="appliance-status" id="light">—</div>
+    </div>
+  </div>
+  <div class="appliance-card">
+    <div class="appliance-icon">🌀</div>
+    <div>
+      <div class="appliance-name">Fan (Relay 2)</div>
+      <div class="appliance-status" id="fan">—</div>
+    </div>
+  </div>
+</div>
+
+<!-- Activity Log -->
+<div class="log-box">
+  <div class="log-title">📋 Activity Log</div>
+  <div id="log">Waiting for Pico connection...</div>
+</div>
+
+<div class="connect-note">
+  Connect your Pico W and set PICO_IP below → Open this page in browser on same Wi-Fi
+</div>
+
+<script>
+  // ── CONFIG: Set your Pico W's IP address here ─────────────
+  const PICO_IP = "192.168.1.100";   // ← Change to your Pico W IP
+  const REFRESH_MS = 3000;
+
+  const logEl = document.getElementById("log");
+
+  function setStatus(id, value) {
+    const el = document.getElementById(id);
+    el.className = "appliance-status";
+    if (value === "ON") { el.classList.add("status-on"); el.textContent = "● ON"; }
+    else if (value === "AUTO-OFF") { el.classList.add("status-auto"); el.textContent = "⏸ AUTO-OFF"; }
+    else { el.classList.add("status-off"); el.textContent = "○ OFF"; }
+  }
+
+  function addLog(msg) {
+    const now = new Date().toLocaleTimeString();
+    logEl.innerHTML = `<span style="color:#00d4ff">[${now}]</span> ${msg}\n` + logEl.innerHTML;
+  }
+
+  async function fetchData() {
+    try {
+      const res = await fetch(`http://${PICO_IP}/data`);
+      const d = await res.json();
+      document.getElementById("motion").textContent = d.motion ? "YES" : "NO";
+      document.getElementById("brightness").textContent = d.brightness;
+      document.getElementById("current").textContent = d.current_A.toFixed(3);
+      document.getElementById("power").textContent = d.power_W.toFixed(2);
+      document.getElementById("energy").textContent = d.energy_wh.toFixed(4);
+      document.getElementById("cost").textContent = "₹ " + d.cost_rs.toFixed(4);
+      setStatus("light", d.light);
+      setStatus("fan", d.fan);
+      addLog(`Power: ${d.power_W.toFixed(1)}W | Motion: ${d.motion ? "YES" : "NO"} | Light: ${d.light} | Fan: ${d.fan}`);
+    } catch (e) {
+      addLog(`<span style="color:#ff4444">Connection error — check PICO_IP or Pico W power</span>`);
+    }
+  }
+
+  // Demo mode (simulated data when no Pico connected)
+  function demoMode() {
+    const motion = Math.random() > 0.4;
+    const brightness = Math.floor(Math.random() * 100);
+    const current = (Math.random() * 2).toFixed(3);
+    const power = (230 * current).toFixed(2);
+    document.getElementById("motion").textContent = motion ? "YES" : "NO";
+    document.getElementById("brightness").textContent = brightness;
+    document.getElementById("current").textContent = current;
+    document.getElementById("power").textContent = power;
+    document.getElementById("energy").textContent = (Math.random() * 0.5).toFixed(4);
+    document.getElementById("cost").textContent = "₹ " + (Math.random() * 0.01).toFixed(4);
+    setStatus("light", motion && brightness < 50 ? "ON" : "AUTO-OFF");
+    setStatus("fan", motion ? "ON" : "AUTO-OFF");
+    addLog(`[DEMO] Power: ${power}W | Motion: ${motion ? "YES" : "NO"}`);
+  }
+
+  // Start in demo mode; switch to live when Pico is connected
+  setInterval(demoMode, REFRESH_MS);
+  demoMode();
+</script>
+
+</body>
+</html>
