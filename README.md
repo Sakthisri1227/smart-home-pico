@@ -186,7 +186,11 @@ cost = (energy_wh / 1000) * electricity_rate  # per kWh
 
 ## 👨‍💻 Team / Author
 
-> *(Add your name, college, department, year)*
+> SAKTHISRI S
+> PRIYANGA B
+> NEGHASHREE S
+> RUVETHA S P
+> POOJA M
 
 ---
 
